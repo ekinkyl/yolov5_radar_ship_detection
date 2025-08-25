@@ -20,7 +20,7 @@ import requests
 import torch
 import torch.nn as nn
 from PIL import Image
-from torch.cuda import amp
+from torch.cuda import amp  
 
 # Import 'ultralytics' package or install if missing
 try:

@@ -1,0 +1,7 @@
+train: /raid/yolov5/moana_xband_gray_temporal_2/images/train
+val: /raid/yolov5/moana_xband_gray_temporal_2/images/val
+test: /raid/yolov5/moana_xband_gray_temporal_2/images/test
+
+
+nc: 1
+names: ['v']

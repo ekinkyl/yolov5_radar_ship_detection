@@ -7,6 +7,70 @@ import torch.nn as nn
 from utils.metrics import bbox_iou
 from utils.torch_utils import de_parallel
 
+import torch.nn.functional as F
+from utils.general import xywh2xyxy  
+
+def alpha_diou_loss(p_boxes_xywh, t_boxes_xywh, alpha=0.5, eps=1e-9):
+    """
+    Alpha-DIoU loss for boxes in xywh format.
+    Implements: L = 1 - IoU^(2α) + (rho/c)^α
+    where rho is center distance, c is diagonal of the smallest enclosing box.
+
+    Args:
+        p_boxes_xywh: (N, 4) predicted boxes in xywh (center x,y,w,h)
+        t_boxes_xywh: (N, 4) target   boxes in xywh (center x,y,w,h)
+        alpha: float in (0, +inf). Often <=1; try 0.3–0.7
+        eps:   small float for numerical stability
+    Returns:
+        loss: (N,) per-box loss
+    """
+    # Convert to xyxy
+    p = xywh2xyxy(p_boxes_xywh)
+    t = xywh2xyxy(t_boxes_xywh)
+
+    # Areas
+    pw = (p[:, 2] - p[:, 0]).clamp(min=eps)
+    ph = (p[:, 3] - p[:, 1]).clamp(min=eps)
+    tw = (t[:, 2] - t[:, 0]).clamp(min=eps)
+    th = (t[:, 3] - t[:, 1]).clamp(min=eps)
+
+    p_area = pw * ph
+    t_area = tw * th
+
+    # Intersection
+    inter_x1 = torch.max(p[:, 0], t[:, 0])
+    inter_y1 = torch.max(p[:, 1], t[:, 1])
+    inter_x2 = torch.min(p[:, 2], t[:, 2])
+    inter_y2 = torch.min(p[:, 3], t[:, 3])
+
+    inter_w = (inter_x2 - inter_x1).clamp(min=0.0)
+    inter_h = (inter_y2 - inter_y1).clamp(min=0.0)
+    inter = inter_w * inter_h
+
+    # IoU
+    union = p_area + t_area - inter + eps
+    iou = inter / union  # (N,)
+
+    # Center distance ρ and enclosing diagonal c
+    px = (p[:, 0] + p[:, 2]) * 0.5
+    py = (p[:, 1] + p[:, 3]) * 0.5
+    tx = (t[:, 0] + t[:, 2]) * 0.5
+    ty = (t[:, 1] + t[:, 3]) * 0.5
+
+    rho2 = (px - tx) ** 2 + (py - ty) ** 2
+    # enclosing box
+    enc_x1 = torch.min(p[:, 0], t[:, 0])
+    enc_y1 = torch.min(p[:, 1], t[:, 1])
+    enc_x2 = torch.max(p[:, 2], t[:, 2])
+    enc_y2 = torch.max(p[:, 3], t[:, 3])
+
+    c2 = (enc_x2 - enc_x1).clamp(min=eps) ** 2 + (enc_y2 - enc_y1).clamp(min=eps) ** 2
+
+    # α-DIoU terms (use sqrt to get ρ, c, then raise to α)
+    rho_over_c = torch.sqrt(rho2 + eps) / torch.sqrt(c2 + eps)
+    loss = 1.0 - torch.pow(iou.clamp(min=eps), 2.0 * alpha) + torch.pow(rho_over_c.clamp(min=eps), alpha)
+    return loss
+
 
 def smooth_BCE(eps=0.1):
     """Returns label smoothing BCE targets for reducing overfitting; pos: `1.0 - 0.5*eps`, neg: `0.5*eps`. For details see https://github.com/ultralytics/yolov3/issues/238#issuecomment-598028441."""
@@ -153,14 +217,35 @@ class ComputeLoss:
                 pxy, pwh, _, pcls = pi[b, a, gj, gi].split((2, 2, 1, self.nc), 1)  # target-subset of predictions
 
                 # Regression
+                # Regression (supports α‑DIoU via hyp)
                 pxy = pxy.sigmoid() * 2 - 0.5
                 pwh = (pwh.sigmoid() * 2) ** 2 * anchors[i]
-                pbox = torch.cat((pxy, pwh), 1)  # predicted box
-                iou = bbox_iou(pbox, tbox[i], CIoU=True).squeeze()  # iou(prediction, target)
-                lbox += (1.0 - iou).mean()  # iou loss
+                pbox = torch.cat((pxy, pwh), 1)  # predicted box (xywh)
+
+                iou_type = self.hyp.get("iou_type", "ciou").lower()
+                alpha    = float(self.hyp.get("alpha_iou", 0.5))
+
+                if iou_type == "adiou":
+                    # 1) Box loss with α‑DIoU
+                    lbox += alpha_diou_loss(pbox, tbox[i], alpha=alpha).mean()
+                    # 2) Still need a *plain IoU* (0..1) for objectness targets
+                    iou_for_obj = bbox_iou(
+                        pbox, tbox[i],
+                        CIoU=False, DIoU=False, GIoU=False
+                    ).squeeze(-1).detach()
+                else:
+                    # stock path (CIoU/DIoU/GIoU/IoU selectable)
+                    iou_ciou = bbox_iou(
+                        pbox, tbox[i],
+                        CIoU=(iou_type == "ciou"),
+                        DIoU=(iou_type == "diou"),
+                        GIoU=(iou_type == "giou")
+                    ).squeeze(-1)
+                    lbox += (1.0 - iou_ciou).mean()
+                    iou_for_obj = iou_ciou.detach()
 
                 # Objectness
-                iou = iou.detach().clamp(0).type(tobj.dtype)
+                iou = iou_for_obj.clamp(0).type(tobj.dtype)   # <- changed line: use iou_for_obj
                 if self.sort_obj_iou:
                     j = iou.argsort()
                     b, a, gj, gi, iou = b[j], a[j], gj[j], gi[j], iou[j]

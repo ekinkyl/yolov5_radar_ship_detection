@@ -190,7 +190,7 @@ def run(
     weights=None,  # model.pt path(s)
     batch_size=32,  # batch size
     imgsz=640,  # inference size (pixels)
-    conf_thres=0.001,  # confidence threshold
+    conf_thres=0.25,  # confidence threshold
     iou_thres=0.6,  # NMS IoU threshold
     max_det=300,  # maximum detections per image
     task="val",  # train, val, test, speed or study
@@ -214,6 +214,9 @@ def run(
     plots=True,
     callbacks=Callbacks(),
     compute_loss=None,
+    nms_type='classic',
+    cluster_beta=0.6,
+    cluster_normalize=False,
 ):
     """
     Evaluates a YOLOv5 model on a dataset and logs performance metrics.
@@ -287,7 +290,7 @@ def run(
     cuda = device.type != "cpu"
     is_coco = isinstance(data.get("val"), str) and data["val"].endswith(f"coco{os.sep}val2017.txt")  # COCO dataset
     nc = 1 if single_cls else int(data["nc"])  # number of classes
-    iouv = torch.linspace(0.5, 0.95, 10, device=device)  # iou vector for mAP@0.5:0.95
+    iouv = torch.linspace(0.7, 0.95, 10, device=device)  # iou vector for mAP@0.5:0.95
     niou = iouv.numel()
 
     # Dataloader
@@ -349,7 +352,15 @@ def run(
         lb = [targets[targets[:, 0] == i, 1:] for i in range(nb)] if save_hybrid else []  # for autolabelling
         with dt[2]:
             preds = non_max_suppression(
-                preds, conf_thres, iou_thres, labels=lb, multi_label=True, agnostic=single_cls, max_det=max_det
+                preds,
+                conf_thres,
+                iou_thres,
+                labels=lb,
+                multi_label=True,
+                agnostic=single_cls,
+                max_det=max_det,
+                method=nms_type,
+                cluster_cfg={'beta': cluster_beta, 'normalize': cluster_normalize}
             )
 
         # Metrics
@@ -519,7 +530,7 @@ def parse_opt():
     parser.add_argument("--weights", nargs="+", type=str, default=ROOT / "yolov5s.pt", help="model path(s)")
     parser.add_argument("--batch-size", type=int, default=32, help="batch size")
     parser.add_argument("--imgsz", "--img", "--img-size", type=int, default=640, help="inference size (pixels)")
-    parser.add_argument("--conf-thres", type=float, default=0.001, help="confidence threshold")
+    parser.add_argument("--conf-thres", type=float, default=0.25, help="confidence threshold")
     parser.add_argument("--iou-thres", type=float, default=0.6, help="NMS IoU threshold")
     parser.add_argument("--max-det", type=int, default=300, help="maximum detections per image")
     parser.add_argument("--task", default="val", help="train, val, test, speed or study")
@@ -537,6 +548,14 @@ def parse_opt():
     parser.add_argument("--exist-ok", action="store_true", help="existing project/name ok, do not increment")
     parser.add_argument("--half", action="store_true", help="use FP16 half-precision inference")
     parser.add_argument("--dnn", action="store_true", help="use OpenCV DNN for ONNX inference")
+    parser.add_argument('--nms-type', type=str, default='classic',
+                    choices=['classic', 'cluster'],
+                    help='NMS method to use')
+    parser.add_argument('--cluster-beta', type=float, default=0.6,
+                        help='Cluster-NMS beta (weight sharpness)')
+    parser.add_argument('--cluster-normalize', action='store_true',
+                        help='Normalize cluster weights to sum=1')
+
     opt = parser.parse_args()
     opt.data = check_yaml(opt.data)  # check YAML
     opt.save_json |= opt.data.endswith("coco.yaml")
