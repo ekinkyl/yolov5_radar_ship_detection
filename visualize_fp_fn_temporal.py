@@ -9,44 +9,50 @@ Assumptions:
 
 Run:  python visualize_fp_fn.py
 """
-import os
-from pathlib import Path
+
 import glob
+from pathlib import Path
+
 import cv2
-import numpy as np
 
 # ---- paths (edit if needed) ----
 ROOT = Path("/raid/yolov5")
 IMG_DIR = ROOT / "moana_xband_gray_temporal_2/images/test"
-GT_DIR  = ROOT / "moana_xband_gray_temporal_2/labels/test"
+GT_DIR = ROOT / "moana_xband_gray_temporal_2/labels/test"
 PRED_DIR = ROOT / "runs/val/xband_temporal_test_results3/labels"
 OUT_DIR = ROOT / "runs/val/xband_temporal_test_results3/vis"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # ---- colors ----
-COL_TP = (0, 255, 0)     # green
-COL_FP = (0, 0, 255)     # red
-COL_FN = (0, 255, 255)   # yellow
+COL_TP = (0, 255, 0)  # green
+COL_FP = (0, 0, 255)  # red
+COL_FN = (0, 255, 255)  # yellow
 
 IOU_THR = 0.7  # match threshold
 
+
 def yolo_to_xyxy(xc, yc, w, h, W, H):
-    x1 = int((xc - w/2) * W)
-    y1 = int((yc - h/2) * H)
-    x2 = int((xc + w/2) * W)
-    y2 = int((yc + h/2) * H)
+    x1 = int((xc - w / 2) * W)
+    y1 = int((yc - h / 2) * H)
+    x2 = int((xc + w / 2) * W)
+    y2 = int((yc + h / 2) * H)
     return max(0, x1), max(0, y1), min(W - 1, x2), min(H - 1, y2)
 
+
 def iou(a, b):
-    x1 = max(a[0], b[0]); y1 = max(a[1], b[1])
-    x2 = min(a[2], b[2]); y2 = min(a[3], b[3])
-    iw = max(0, x2 - x1); ih = max(0, y2 - y1)
+    x1 = max(a[0], b[0])
+    y1 = max(a[1], b[1])
+    x2 = min(a[2], b[2])
+    y2 = min(a[3], b[3])
+    iw = max(0, x2 - x1)
+    ih = max(0, y2 - y1)
     inter = iw * ih
-    ua = (a[2]-a[0])*(a[3]-a[1]) + (b[2]-b[0])*(b[3]-b[1]) - inter
+    ua = (a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - inter
     return inter / ua if ua > 0 else 0.0
 
+
 def load_gt_boxes(txt_path, W, H):
-    """YOLO GT: class xc yc w h (normalized)"""
+    """YOLO GT: class xc yc w h (normalized)."""
     boxes = []
     if not txt_path.exists():
         return boxes
@@ -59,8 +65,9 @@ def load_gt_boxes(txt_path, W, H):
             boxes.append(yolo_to_xyxy(xc, yc, w, h, W, H))
     return boxes
 
+
 def load_pred_boxes(txt_path, W, H):
-    """YOLO preds (from val.py --save-txt): class xc yc w h [conf]"""
+    """YOLO preds (from val.py --save-txt): class xc yc w h [conf]."""
     boxes = []
     if not txt_path.exists():
         return boxes
@@ -74,6 +81,7 @@ def load_pred_boxes(txt_path, W, H):
             x1, y1, x2, y2 = yolo_to_xyxy(xc, yc, w, h, W, H)
             boxes.append(((x1, y1, x2, y2), conf))
     return boxes
+
 
 # iterate images
 pngs = sorted(glob.glob(str(IMG_DIR / "*.png")))
@@ -94,10 +102,10 @@ for ip, img_path in enumerate(pngs, 1):
 
     H, W = img.shape[:2]
 
-    gt_path   = GT_DIR / f"{name}.txt"
+    gt_path = GT_DIR / f"{name}.txt"
     pred_path = PRED_DIR / f"{name}.txt"
 
-    gt_boxes   = load_gt_boxes(gt_path, W, H)
+    gt_boxes = load_gt_boxes(gt_path, W, H)
     pred_boxes = load_pred_boxes(pred_path, W, H)  # list of ((x1,y1,x2,y2), conf)
 
     matched_gt = set()
@@ -118,8 +126,9 @@ for ip, img_path in enumerate(pngs, 1):
             # TP (green)
             x1, y1, x2, y2 = pb
             cv2.rectangle(img, (x1, y1), (x2, y2), COL_TP, 2)
-            cv2.putText(img, f"TP {conf:.2f}", (x1, max(0, y1 - 6)),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, COL_TP, 1, cv2.LINE_AA)
+            cv2.putText(
+                img, f"TP {conf:.2f}", (x1, max(0, y1 - 6)), cv2.FONT_HERSHEY_SIMPLEX, 0.7, COL_TP, 1, cv2.LINE_AA
+            )
 
     # FP (red): predictions not matched
     for pi, (pb, conf) in enumerate(pred_boxes):
@@ -127,8 +136,7 @@ for ip, img_path in enumerate(pngs, 1):
             continue
         x1, y1, x2, y2 = pb
         cv2.rectangle(img, (x1, y1), (x2, y2), COL_FP, 2)
-        cv2.putText(img, f"FP {conf:.2f}", (x1, max(0, y1 - 6)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, COL_FP, 1, cv2.LINE_AA)
+        cv2.putText(img, f"FP {conf:.2f}", (x1, max(0, y1 - 6)), cv2.FONT_HERSHEY_SIMPLEX, 0.7, COL_FP, 1, cv2.LINE_AA)
 
     # FN (yellow): GT not matched
     for gi, gb in enumerate(gt_boxes):
@@ -136,8 +144,7 @@ for ip, img_path in enumerate(pngs, 1):
             continue
         x1, y1, x2, y2 = gb
         cv2.rectangle(img, (x1, y1), (x2, y2), COL_FN, 2)
-        cv2.putText(img, "FN", (x1, max(0, y1 - 6)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, COL_FN, 1, cv2.LINE_AA)
+        cv2.putText(img, "FN", (x1, max(0, y1 - 6)), cv2.FONT_HERSHEY_SIMPLEX, 0.7, COL_FN, 1, cv2.LINE_AA)
 
     out_path = OUT_DIR / f"{name}.jpg"
     cv2.imwrite(str(out_path), img)

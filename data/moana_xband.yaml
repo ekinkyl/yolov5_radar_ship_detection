@@ -3,4 +3,4 @@ val: /raid/yolov5/moana_xband_gray_split_sequence_final/images/val
 test: /raid/yolov5/moana_xband_gray_split_sequence_final/images/test
 
 nc: 1
-names: ['v']
+names: ["v"]

@@ -214,7 +214,7 @@ def run(
     plots=True,
     callbacks=Callbacks(),
     compute_loss=None,
-    nms_type='classic',
+    nms_type="classic",
     cluster_beta=0.6,
     cluster_normalize=False,
 ):
@@ -360,7 +360,7 @@ def run(
                 agnostic=single_cls,
                 max_det=max_det,
                 method=nms_type,
-                cluster_cfg={'beta': cluster_beta, 'normalize': cluster_normalize}
+                cluster_cfg={"beta": cluster_beta, "normalize": cluster_normalize},
             )
 
         # Metrics
@@ -548,13 +548,11 @@ def parse_opt():
     parser.add_argument("--exist-ok", action="store_true", help="existing project/name ok, do not increment")
     parser.add_argument("--half", action="store_true", help="use FP16 half-precision inference")
     parser.add_argument("--dnn", action="store_true", help="use OpenCV DNN for ONNX inference")
-    parser.add_argument('--nms-type', type=str, default='classic',
-                    choices=['classic', 'cluster'],
-                    help='NMS method to use')
-    parser.add_argument('--cluster-beta', type=float, default=0.6,
-                        help='Cluster-NMS beta (weight sharpness)')
-    parser.add_argument('--cluster-normalize', action='store_true',
-                        help='Normalize cluster weights to sum=1')
+    parser.add_argument(
+        "--nms-type", type=str, default="classic", choices=["classic", "cluster"], help="NMS method to use"
+    )
+    parser.add_argument("--cluster-beta", type=float, default=0.6, help="Cluster-NMS beta (weight sharpness)")
+    parser.add_argument("--cluster-normalize", action="store_true", help="Normalize cluster weights to sum=1")
 
     opt = parser.parse_args()
     opt.data = check_yaml(opt.data)  # check YAML
