@@ -33,6 +33,7 @@ import pkg_resources as pkg
 import torch
 import torchvision
 import yaml
+
 from .metrics import box_iou
 
 # Import 'ultralytics' package or install if missing
@@ -1008,6 +1009,7 @@ def clip_segments(segments, shape):
         segments[:, 0] = segments[:, 0].clip(0, shape[1])  # x
         segments[:, 1] = segments[:, 1].clip(0, shape[0])  # y
 
+
 def non_max_suppression(
     prediction,
     conf_thres=0.25,
@@ -1119,6 +1121,7 @@ def non_max_suppression(
             break  # time limit exceeded
 
     return output
+
 
 def strip_optimizer(f="best.pt", s=""):
     """

@@ -17,8 +17,8 @@ from pathlib import Path
 
 import torch
 import torch.nn as nn
-from models.common import MBV3Backbone, TupleRoute
 
+from models.common import TupleRoute
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[1]  # YOLOv5 root directory
@@ -403,11 +403,11 @@ def parse_model(d, ch):
         if m is TupleRoute:
             sel = args[0] if isinstance(args[0], int) else int(args[0])
             src = f if isinstance(f, int) else f[0]
-            if src >= 0 and hasattr(layers[src], 'out_channels'):
-                c2 = layers[src].out_channels[sel]   # 40, 112, 160
+            if src >= 0 and hasattr(layers[src], "out_channels"):
+                c2 = layers[src].out_channels[sel]  # 40, 112, 160
             else:
                 c2 = ch[src]
-            ch.append(c2)   # <--- add this so future layers see correct input channels
+            ch.append(c2)  # <--- add this so future layers see correct input channels
             m_ = m(*args)
             t = str(m)[8:-2]
             np = sum(x.numel() for x in m_.parameters())
@@ -415,7 +415,6 @@ def parse_model(d, ch):
             layers.append(m_)
             save.extend([f] if isinstance(f, int) else f)
             continue
-
 
         for j, a in enumerate(args):
             with contextlib.suppress(NameError):

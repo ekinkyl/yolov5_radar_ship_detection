@@ -411,7 +411,7 @@ def train(hyp, opt, device, callbacks):
                     imgs = nn.functional.interpolate(imgs, size=ns, mode="bilinear", align_corners=False)
 
             # Forward
-            with torch.amp.autocast(device_type='cuda'):
+            with torch.amp.autocast(device_type="cuda"):
                 pred = model(imgs)  # forward
                 loss, loss_items = compute_loss(pred, targets.to(device))  # loss scaled by batch_size
                 if RANK != -1:
@@ -614,8 +614,6 @@ def parse_opt(known=False):
     # NDJSON logging
     parser.add_argument("--ndjson-console", action="store_true", help="Log ndjson to console")
     parser.add_argument("--ndjson-file", action="store_true", help="Log ndjson to file")
-
-
 
     return parser.parse_known_args()[0] if known else parser.parse_args()
 

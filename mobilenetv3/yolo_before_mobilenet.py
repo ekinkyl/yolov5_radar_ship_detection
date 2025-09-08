@@ -17,8 +17,6 @@ from pathlib import Path
 
 import torch
 import torch.nn as nn
-from models.common import MBV3Backbone, TupleRoute
-
 
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[1]  # YOLOv5 root directory
