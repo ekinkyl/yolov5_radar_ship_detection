@@ -4,11 +4,10 @@
 import torch
 import torch.nn as nn
 
+from utils.general import xywh2xyxy
 from utils.metrics import bbox_iou
 from utils.torch_utils import de_parallel
 
-import torch.nn.functional as F
-from utils.general import xywh2xyxy  
 
 def alpha_diou_loss(p_boxes_xywh, t_boxes_xywh, alpha=0.5, eps=1e-9):
     """
@@ -223,29 +222,23 @@ class ComputeLoss:
                 pbox = torch.cat((pxy, pwh), 1)  # predicted box (xywh)
 
                 iou_type = self.hyp.get("iou_type", "ciou").lower()
-                alpha    = float(self.hyp.get("alpha_iou", 0.5))
+                alpha = float(self.hyp.get("alpha_iou", 0.5))
 
                 if iou_type == "adiou":
                     # 1) Box loss with α‑DIoU
                     lbox += alpha_diou_loss(pbox, tbox[i], alpha=alpha).mean()
                     # 2) Still need a *plain IoU* (0..1) for objectness targets
-                    iou_for_obj = bbox_iou(
-                        pbox, tbox[i],
-                        CIoU=False, DIoU=False, GIoU=False
-                    ).squeeze(-1).detach()
+                    iou_for_obj = bbox_iou(pbox, tbox[i], CIoU=False, DIoU=False, GIoU=False).squeeze(-1).detach()
                 else:
                     # stock path (CIoU/DIoU/GIoU/IoU selectable)
                     iou_ciou = bbox_iou(
-                        pbox, tbox[i],
-                        CIoU=(iou_type == "ciou"),
-                        DIoU=(iou_type == "diou"),
-                        GIoU=(iou_type == "giou")
+                        pbox, tbox[i], CIoU=(iou_type == "ciou"), DIoU=(iou_type == "diou"), GIoU=(iou_type == "giou")
                     ).squeeze(-1)
                     lbox += (1.0 - iou_ciou).mean()
                     iou_for_obj = iou_ciou.detach()
 
                 # Objectness
-                iou = iou_for_obj.clamp(0).type(tobj.dtype)   # <- changed line: use iou_for_obj
+                iou = iou_for_obj.clamp(0).type(tobj.dtype)  # <- changed line: use iou_for_obj
                 if self.sort_obj_iou:
                     j = iou.argsort()
                     b, a, gj, gi, iou = b[j], a[j], gj[j], gi[j], iou[j]

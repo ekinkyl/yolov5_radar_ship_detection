@@ -10,16 +10,20 @@ Bulk-convert X-band dataset images to grayscale.
 """
 
 import argparse
-import os
-from pathlib import Path
 import shutil
+from pathlib import Path
+
 import cv2
 
 IMG_EXTS = {".png", ".jpg", ".jpeg"}
 
+
 def to_grayscale(img_bgr, mode="3ch"):
-    """Convert BGR (or BGRA) image to grayscale.
-    mode: '1ch' -> single channel, '3ch' -> 3-channel grayscale (recommended)."""
+    """
+    Convert BGR (or BGRA) image to grayscale.
+
+    mode: '1ch' -> single channel, '3ch' -> 3-channel grayscale (recommended).
+    """
     if img_bgr is None:
         return None
 
@@ -33,17 +37,22 @@ def to_grayscale(img_bgr, mode="3ch"):
     # default: 3-channel grayscale
     return cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
 
+
 def should_copy(path: Path):
     # copy non-image files (e.g., labels) when requested
     return True
+
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--input", required=True, help="Input root folder (e.g., data/moana_xband)")
     ap.add_argument("--output", required=True, help="Output root folder (e.g., data/moana_xband_gray)")
     ap.add_argument("--mode", choices=["1ch", "3ch"], default="3ch", help="Grayscale save mode")
-    ap.add_argument("--copy-labels", action="store_true",
-                    help="If set, non-image files under any 'labels' directory are copied as-is.")
+    ap.add_argument(
+        "--copy-labels",
+        action="store_true",
+        help="If set, non-image files under any 'labels' directory are copied as-is.",
+    )
     args = ap.parse_args()
 
     in_root = Path(args.input).resolve()
@@ -81,16 +90,17 @@ def main():
                 count_img += 1
 
         # Optionally mirror labels/ or other non-image files
-        elif args.copy-labels and "labels" in [p.name for p in src_path.parents]:
+        elif args.copy - labels and "labels" in [p.name for p in src_path.parents]:
             dst_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src_path, dst_path)
             count_copy += 1
 
-    print(f"\nDone.")
+    print("\nDone.")
     print(f"Converted images : {count_img}")
     print(f"Copied label files: {count_copy}")
     print(f"Skipped/failed    : {count_skip}")
     print(f"Output root       : {out_root}")
+
 
 if __name__ == "__main__":
     main()

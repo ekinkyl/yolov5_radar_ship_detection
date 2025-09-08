@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 json_dir = "jsons"
 output_dir = "moana_xband/labels"
@@ -8,7 +8,7 @@ os.makedirs(output_dir, exist_ok=True)
 
 for file in os.listdir(json_dir):
     if file.endswith(".json"):
-        with open(os.path.join(json_dir, file), "r") as f:
+        with open(os.path.join(json_dir, file)) as f:
             data = json.load(f)
 
         image_w = data["image"]["width"]

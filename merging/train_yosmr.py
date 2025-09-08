@@ -411,7 +411,7 @@ def train(hyp, opt, device, callbacks):
                     imgs = nn.functional.interpolate(imgs, size=ns, mode="bilinear", align_corners=False)
 
             # Forward
-            with torch.amp.autocast(device_type='cuda'):
+            with torch.amp.autocast(device_type="cuda"):
                 pred = model(imgs)  # forward
                 loss, loss_items = compute_loss(pred, targets.to(device))  # loss scaled by batch_size
                 if RANK != -1:
@@ -536,9 +536,9 @@ def train(hyp, opt, device, callbacks):
                         plots=plots,
                         callbacks=callbacks,
                         compute_loss=compute_loss,
-                        nms_type=opt.nms_type,                 # NEW
-                        cluster_beta=opt.cluster_beta,         # NEW
-                        cluster_normalize=opt.cluster_normalize, # NEW
+                        nms_type=opt.nms_type,  # NEW
+                        cluster_beta=opt.cluster_beta,  # NEW
+                        cluster_normalize=opt.cluster_normalize,  # NEW
                     )  # val best model with plots
                     if is_coco:
                         callbacks.run("on_fit_epoch_end", list(mloss) + list(results) + lr, epoch, best_fitness, fi)
@@ -620,11 +620,9 @@ def parse_opt(known=False):
     # NDJSON logging
     parser.add_argument("--ndjson-console", action="store_true", help="Log ndjson to console")
     parser.add_argument("--ndjson-file", action="store_true", help="Log ndjson to file")
-    parser.add_argument('--nms-type', type=str, default='classic', choices=['classic', 'cluster'])
-    parser.add_argument('--cluster-beta', type=float, default=0.6)
-    parser.add_argument('--cluster-normalize', action='store_true')
-
-
+    parser.add_argument("--nms-type", type=str, default="classic", choices=["classic", "cluster"])
+    parser.add_argument("--cluster-beta", type=float, default=0.6)
+    parser.add_argument("--cluster-normalize", action="store_true")
 
     return parser.parse_known_args()[0] if known else parser.parse_args()
 

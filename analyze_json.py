@@ -1,5 +1,5 @@
-import os
 import json
+import os
 
 json_dir = "jsons/"
 total = 0
@@ -10,7 +10,7 @@ for file in os.listdir(json_dir):
     if file.endswith(".json"):
         with open(os.path.join(json_dir, file)) as f:
             data = json.load(f)
-        
+
         # Farklı json yapıları için kontrol:
         if isinstance(data, list):
             is_empty = len(data) == 0
