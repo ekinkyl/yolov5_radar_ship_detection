@@ -3,11 +3,11 @@ import cv2, numpy as np
 from tqdm import tqdm
 
 # INPUT: your sequential split
-SRC_ROOT = Path("/raid/yolov5/moana_xband_gray_split_sequence_final")
+SRC_ROOT = Path("/raid/yolov5/Kuartis_split")
 # OUTPUT: new dataset with 3‑channel temporal images
-DST_ROOT = Path("/raid/yolov5/moana_xband_gray_temporal_2")
+DST_ROOT = Path("/raid/yolov5/Kuartis_split_single_stream")
 SPLITS = ["train", "val", "test"]
-S = 2  # temporal offset (adjacent frames)
+S = 1  # temporal offset (adjacent frames)
 
 def read_gray(p: Path):
     im = cv2.imread(str(p), cv2.IMREAD_GRAYSCALE)

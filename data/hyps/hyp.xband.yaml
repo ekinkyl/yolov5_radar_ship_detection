@@ -22,9 +22,14 @@ anchor_t: 4.0
 fl_gamma: 0.0
 
 # Color aug (minimal for radar)
+#hsv_h: 0.0
+#hsv_s: 0.10
+#hsv_v: 0.10
+
+# for 3 frame 
 hsv_h: 0.0
-hsv_s: 0.10
-hsv_v: 0.10
+hsv_s: 0.0
+hsv_v: 0.0
 
 # Geometric aug
 degrees: 2.0
@@ -41,5 +46,5 @@ mixup: 0.05
 copy_paste: 0.0
 
 # α-DIoU Loss
-iou_type: adiou      # options: ciou, diou, giou, iou, adiou
-alpha_iou: 0.7      # α in (0, +∞); try 0.3–0.7 for small ships
+#iou_type: adiou      # options: ciou, diou, giou, iou, adiou
+#alpha_iou: 0.5     # α in (0, +∞); try 0.3–0.7 for small ships

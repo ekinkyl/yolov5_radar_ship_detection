@@ -1,0 +1,6 @@
+train: /raid/yolov5/Kuartis_split/images/train
+val: /raid/yolov5/Kuartis_split/images/val
+test: /raid/yolov5/Kuartis_split/images/test
+
+nc: 1
+names: ['v']

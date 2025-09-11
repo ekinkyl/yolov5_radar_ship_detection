@@ -1008,79 +1008,6 @@ def clip_segments(segments, shape):
         segments[:, 0] = segments[:, 0].clip(0, shape[1])  # x
         segments[:, 1] = segments[:, 1].clip(0, shape[0])  # y
 
-def _connected_components_from_adj(adj: torch.Tensor):
-    """
-    adj: [N,N] bool adjacency on current device.
-    Returns: list[LongTensor] with indices per component.
-    """
-    N = adj.size(0)
-    visited = torch.zeros(N, dtype=torch.bool, device=adj.device)
-    comps = []
-    for i in range(N):
-        if not visited[i]:
-            stack = [i]
-            visited[i] = True
-            comp = []
-            while stack:
-                u = stack.pop()
-                comp.append(u)
-                nbrs = torch.nonzero(adj[u] & ~visited, as_tuple=False).flatten()
-                for v in nbrs.tolist():
-                    visited[v] = True
-                    stack.append(v)
-            comps.append(torch.tensor(comp, device=adj.device, dtype=torch.long))
-    return comps
-
-
-def _cluster_nms_single_class(
-    boxes: torch.Tensor,      # [N,4] xyxy
-    scores: torch.Tensor,     # [N]
-    iou_thres: float,
-    beta: float = 0.6,
-    normalize: bool = True
-):
-    """
-    Cluster-NMS for one image, one class.
-    Returns merged_boxes [M,4], merged_scores [M].
-    """
-    N = boxes.size(0)
-    if N == 0:
-        return boxes, scores
-
-    # sort by score desc
-    order = scores.argsort(descending=True)
-    boxes = boxes[order]
-    scores = scores[order]
-
-    # pairwise IoU and adjacency
-    ious = box_iou(boxes, boxes)      # [N,N]
-    adj = ious >= iou_thres
-    adj.fill_diagonal_(True)
-
-    comps = _connected_components_from_adj(adj)
-
-    merged_boxes, merged_scores = [], []
-    for comp in comps:
-        b = boxes[comp]      # [k,4]
-        s = scores[comp]     # [k]
-        if b.size(0) == 1:
-            merged_boxes.append(b[0])
-            merged_scores.append(s[0])
-            continue
-
-        # anchor = strongest (index 0 after sorting)
-        i_anchor = box_iou(b[:1], b).squeeze(0)  # [k]
-        w = s * torch.exp(beta * i_anchor)
-        if normalize:
-            w = w / (w.sum() + 1e-9)
-
-        mb = (w[:, None] * b).sum(dim=0)  # weighted avg in xyxy
-        ms = torch.max(s)                 # keep max score
-        merged_boxes.append(mb)
-        merged_scores.append(ms)
-
-    return torch.stack(merged_boxes, 0), torch.stack(merged_scores, 0)
-
 def non_max_suppression(
     prediction,
     conf_thres=0.25,
@@ -1091,9 +1018,6 @@ def non_max_suppression(
     labels=(),
     max_det=300,
     nm=0,  # number of masks
-    method='classic',                   # NEW: 'classic' or 'cluster'
-    cluster_cfg=None                    # NEW: dict {'beta':0.6, 'normalize':True}
-
 ):
     """
     Non-Maximum Suppression (NMS) on inference results to reject overlapping detections.
@@ -1175,69 +1099,24 @@ def non_max_suppression(
         x = x[x[:, 4].argsort(descending=True)[:max_nms]]  # sort by confidence and remove excess boxes
 
         # Batched NMS
-        # Batched NMS (classic vs cluster)
-        c = x[:, 5:6] * (0 if agnostic else max_wh)  # class offsets if not agnostic
-        boxes_all, scores_all = x[:, :4] + c, x[:, 4]
+        c = x[:, 5:6] * (0 if agnostic else max_wh)  # classes
+        boxes, scores = x[:, :4] + c, x[:, 4]  # boxes (offset by class), scores
+        i = torchvision.ops.nms(boxes, scores, iou_thres)  # NMS
+        i = i[:max_det]  # limit detections
+        if merge and (1 < n < 3e3):  # Merge NMS (boxes merged using weighted mean)
+            # update boxes as boxes(i,4) = weights(i,n) * boxes(n,4)
+            iou = box_iou(boxes[i], boxes) > iou_thres  # iou matrix
+            weights = iou * scores[None]  # box weights
+            x[i, :4] = torch.mm(weights, x[:, :4]).float() / weights.sum(1, keepdim=True)  # merged boxes
+            if redundant:
+                i = i[iou.sum(1) > 1]  # require redundancy
 
-        if method == 'classic' or (nm > 0):  # fallback to classic if masks are present
-            i = torchvision.ops.nms(boxes_all, scores_all, iou_thres)
-            i = i[:max_det]
-            if merge and (1 < n < 3e3):
-                iou = box_iou(boxes_all[i], boxes_all) > iou_thres
-                weights = iou * scores_all[None]
-                x[i, :4] = torch.mm(weights, x[:, :4]).float() / weights.sum(1, keepdim=True)
-                if redundant:
-                    i = i[iou.sum(1) > 1]
-            output[xi] = x[i]
-        else:
-            # Cluster-NMS path
-            if cluster_cfg is None:
-                cluster_cfg = {}
-            beta = float(cluster_cfg.get('beta', 0.6))
-            normalize = bool(cluster_cfg.get('normalize', True))
-
-            out_list = []
-            if agnostic:
-                # all classes together
-                b = x[:, :4]
-                s = x[:, 4]
-                mb, ms = _cluster_nms_single_class(b, s, iou_thres, beta, normalize)
-                # assign class from nearest original box
-                ious = box_iou(mb, x[:, :4])          # [M,N]
-                nn_idx = ious.argmax(dim=1)           # nearest original
-                cls_col = x[nn_idx, 5:6]              # [M,1]
-                out_c = torch.cat([mb, ms.unsqueeze(1), cls_col], dim=1)
-                out_list.append(out_c)
-            else:
-                # per-class to mirror classic behavior
-                for cval in x[:, 5].unique():
-                    idx = (x[:, 5] == cval).nonzero(as_tuple=False).flatten()
-                    x_c = x[idx]
-                    if x_c.numel() == 0:
-                        continue
-                    b = x_c[:, :4]
-                    s = x_c[:, 4]
-                    mb, ms = _cluster_nms_single_class(b, s, iou_thres, beta, normalize)
-                    cls_col  = torch.full((mb.size(0), 1), cval, device=mb.device)
-                    conf_col = ms.unsqueeze(1)
-                    out_c = torch.cat([mb, conf_col, cls_col], dim=1)  # [M,6]
-                    out_list.append(out_c)
-
-            if len(out_list):
-                y = torch.cat(out_list, dim=0)
-                # enforce max_det
-                if y.size(0) > max_det:
-                    keep = y[:, 4].argsort(descending=True)[:max_det]
-                    y = y[keep]
-                output[xi] = y
-            else:
-                output[xi] = torch.zeros((0, 6), device=x.device)
-
+        output[xi] = x[i]
         if mps:
             output[xi] = output[xi].to(device)
         if (time.time() - t) > time_limit:
             LOGGER.warning(f"WARNING ⚠️ NMS time limit {time_limit:.3f}s exceeded")
-            break
+            break  # time limit exceeded
 
     return output
 

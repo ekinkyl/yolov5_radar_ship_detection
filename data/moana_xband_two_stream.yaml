@@ -1,0 +1,11 @@
+# moana_xband_two_stream.yaml
+# Dataset config for two-stream training (appearance + motion)
+
+# Appearance stream paths (motion images are loaded automatically in dataloader)
+train: /raid/yolov5/moana_xband_two_stream_both_s1/images_app/train
+val: /raid/yolov5/moana_xband_two_stream_both_s1/images_app/val
+test: /raid/yolov5/moana_xband_two_stream_both_s1/images_app/test
+
+# Classes
+nc: 1
+names: ['v']   # v = vessel/ship

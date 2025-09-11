@@ -57,6 +57,15 @@ from utils.general import (
 )
 from utils.torch_utils import torch_distributed_zero_first
 
+from utils.radar_aug import (
+    radar_noise,
+    rcs_scaling,
+    azimuth_motion_blur,
+    ghost_echo,
+    range_distortion,
+)
+
+
 # Parameters
 HELP_URL = "See https://docs.ultralytics.com/yolov5/tutorials/train_custom_data"
 IMG_FORMATS = "bmp", "dng", "jpeg", "jpg", "mpo", "png", "tif", "tiff", "webp", "pfm"  # include image suffixes
@@ -806,6 +815,40 @@ class LoadImagesAndLabels(Dataset):
                     shear=hyp["shear"],
                     perspective=hyp["perspective"],
                 )
+                # Radar-specific Noise (Gaussian + Speckle)
+                img = radar_noise(
+                    img,
+                    prob=hyp.get("radar_noise", 0.0),
+                    gauss_std=hyp.get("radar_gauss_std", 10),
+                    speckle_var=hyp.get("radar_speckle_var", 0.05),
+                )
+
+                # Radar-specific RCS scaling
+                img = rcs_scaling(
+                    img,
+                    scale_range=(hyp.get("rcs_min", 0.8), hyp.get("rcs_max", 1.2)),
+                    prob=hyp.get("rcs_prob", 0.0),
+                )
+                # Radar-specific Azimuth Motion Blur
+                img = azimuth_motion_blur(
+                    img,
+                    prob=hyp.get("az_blur_prob", 0.0),
+                    kernel_size=int(hyp.get("az_blur_kernel", 5)),
+                )
+                # Radar-specific Ghost Echoes
+                img = ghost_echo(
+                    img,
+                    prob=hyp.get("ghost_prob", 0.0),
+                    max_size=int(hyp.get("ghost_max_size", 30)),
+                    intensity=(hyp.get("ghost_min_intensity", 0.2), hyp.get("ghost_max_intensity", 0.5)),
+                )
+                # Radar-specific Range Distortion
+                img = range_distortion(
+                    img,
+                    prob=hyp.get("range_distort_prob", 0.0),
+                    scale_range=(hyp.get("range_min_scale", 0.9), hyp.get("range_max_scale", 1.1)),
+                )
+
 
         nl = len(labels)  # number of labels
         if nl:

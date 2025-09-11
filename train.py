@@ -468,9 +468,6 @@ def train(hyp, opt, device, callbacks):
                     plots=False,
                     callbacks=callbacks,
                     compute_loss=compute_loss,
-                    nms_type=opt.nms_type,
-                    cluster_beta=opt.cluster_beta,
-                    cluster_normalize=opt.cluster_normalize,
                 )
 
             # Update best mAP
@@ -617,9 +614,7 @@ def parse_opt(known=False):
     # NDJSON logging
     parser.add_argument("--ndjson-console", action="store_true", help="Log ndjson to console")
     parser.add_argument("--ndjson-file", action="store_true", help="Log ndjson to file")
-    parser.add_argument('--nms-type', type=str, default='classic', choices=['classic', 'cluster'])
-    parser.add_argument('--cluster-beta', type=float, default=0.6)
-    parser.add_argument('--cluster-normalize', action='store_true')
+
 
 
     return parser.parse_known_args()[0] if known else parser.parse_args()

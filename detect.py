@@ -97,9 +97,6 @@ def run(
     half=False,  # use FP16 half-precision inference
     dnn=False,  # use OpenCV DNN for ONNX inference
     vid_stride=1,  # video frame-rate stride
-    nms_type='classic',
-    cluster_beta=0.6,
-    cluster_normalize=False
 ):
     """
     Runs YOLOv5 detection inference on various sources like images, videos, directories, streams, etc.
@@ -210,16 +207,7 @@ def run(
                 pred = model(im, augment=augment, visualize=visualize)
         # NMS
         with dt[2]:
-            pred = non_max_suppression(
-                pred,
-                conf_thres,
-                iou_thres,
-                classes,
-                agnostic_nms,
-                max_det=max_det,
-                method=nms_type,
-                cluster_cfg={'beta': cluster_beta, 'normalize': cluster_normalize}
-            )
+            pred = non_max_suppression(pred, conf_thres, iou_thres, classes, agnostic_nms, max_det=max_det)
 
         # Second-stage classifier (optional)
         # pred = utils.general.apply_classifier(pred, classifier_model, im, im0s)
@@ -412,13 +400,6 @@ def parse_opt():
     parser.add_argument("--half", action="store_true", help="use FP16 half-precision inference")
     parser.add_argument("--dnn", action="store_true", help="use OpenCV DNN for ONNX inference")
     parser.add_argument("--vid-stride", type=int, default=1, help="video frame-rate stride")
-    parser.add_argument('--nms-type', type=str, default='classic',
-                    choices=['classic', 'cluster'], help='NMS method')
-    parser.add_argument('--cluster-beta', type=float, default=0.6,
-                        help='Cluster-NMS beta (weight sharpness)')
-    parser.add_argument('--cluster-normalize', action='store_true',
-                        help='Normalize cluster weights to sum=1')
-
     opt = parser.parse_args()
     opt.imgsz *= 2 if len(opt.imgsz) == 1 else 1  # expand
     print_args(vars(opt))

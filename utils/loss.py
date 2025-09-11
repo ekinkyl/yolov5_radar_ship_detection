@@ -9,21 +9,9 @@ from utils.torch_utils import de_parallel
 
 import torch.nn.functional as F
 from utils.general import xywh2xyxy  
-
+"""
 def alpha_diou_loss(p_boxes_xywh, t_boxes_xywh, alpha=0.5, eps=1e-9):
-    """
-    Alpha-DIoU loss for boxes in xywh format.
-    Implements: L = 1 - IoU^(2α) + (rho/c)^α
-    where rho is center distance, c is diagonal of the smallest enclosing box.
-
-    Args:
-        p_boxes_xywh: (N, 4) predicted boxes in xywh (center x,y,w,h)
-        t_boxes_xywh: (N, 4) target   boxes in xywh (center x,y,w,h)
-        alpha: float in (0, +inf). Often <=1; try 0.3–0.7
-        eps:   small float for numerical stability
-    Returns:
-        loss: (N,) per-box loss
-    """
+   
     # Convert to xyxy
     p = xywh2xyxy(p_boxes_xywh)
     t = xywh2xyxy(t_boxes_xywh)
@@ -71,6 +59,7 @@ def alpha_diou_loss(p_boxes_xywh, t_boxes_xywh, alpha=0.5, eps=1e-9):
     loss = 1.0 - torch.pow(iou.clamp(min=eps), 2.0 * alpha) + torch.pow(rho_over_c.clamp(min=eps), alpha)
     return loss
 
+"""
 
 def smooth_BCE(eps=0.1):
     """Returns label smoothing BCE targets for reducing overfitting; pos: `1.0 - 0.5*eps`, neg: `0.5*eps`. For details see https://github.com/ultralytics/yolov3/issues/238#issuecomment-598028441."""
@@ -215,8 +204,15 @@ class ComputeLoss:
             if n := b.shape[0]:
                 # pxy, pwh, _, pcls = pi[b, a, gj, gi].tensor_split((2, 4, 5), dim=1)  # faster, requires torch 1.8.0
                 pxy, pwh, _, pcls = pi[b, a, gj, gi].split((2, 2, 1, self.nc), 1)  # target-subset of predictions
-
                 # Regression
+                
+                pxy = pxy.sigmoid() * 2 - 0.5
+                pwh = (pwh.sigmoid() * 2) ** 2 * anchors[i]
+                pbox = torch.cat((pxy, pwh), 1)  # predicted box
+                iou = bbox_iou(pbox, tbox[i], CIoU=True).squeeze()  # iou(prediction, target)
+                lbox += (1.0 - iou).mean()  # iou loss
+                
+                """
                 # Regression (supports α‑DIoU via hyp)
                 pxy = pxy.sigmoid() * 2 - 0.5
                 pwh = (pwh.sigmoid() * 2) ** 2 * anchors[i]
@@ -243,15 +239,16 @@ class ComputeLoss:
                     ).squeeze(-1)
                     lbox += (1.0 - iou_ciou).mean()
                     iou_for_obj = iou_ciou.detach()
-
+                """
                 # Objectness
-                iou = iou_for_obj.clamp(0).type(tobj.dtype)   # <- changed line: use iou_for_obj
+                iou = iou.detach().clamp(0).type(tobj.dtype)
                 if self.sort_obj_iou:
                     j = iou.argsort()
                     b, a, gj, gi, iou = b[j], a[j], gj[j], gi[j], iou[j]
                 if self.gr < 1:
                     iou = (1.0 - self.gr) + self.gr * iou
                 tobj[b, a, gj, gi] = iou  # iou ratio
+
 
                 # Classification
                 if self.nc > 1:  # cls loss (only if multiple classes)

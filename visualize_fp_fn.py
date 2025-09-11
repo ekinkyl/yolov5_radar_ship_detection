@@ -16,10 +16,10 @@ import cv2
 
 # ---- paths (edit if needed) ----
 ROOT = Path("/raid/yolov5")
-IMG_DIR = ROOT / "moana_xband_gray_split_sequence_final/images/test"
-GT_DIR  = ROOT / "moana_xband_gray_split_sequence_final/labels/test"
-PRED_DIR = ROOT / "runs/val/xband_s_ddp_b32_g3g417_test/labels"
-OUT_DIR = ROOT / "runs/val/xband_s_ddp_b32_g3g417_test/vis"
+IMG_DIR = ROOT / "Kuartis_split/images/test"
+GT_DIR  = ROOT / "Kuartis_split/labels/test"
+PRED_DIR = ROOT / "runs/val/baseline_kuartis_with_augmentatios_test/labels"
+OUT_DIR = ROOT / "runs/val/baseline_kuartis_with_augmentatios_test/vis"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # ---- colors ----

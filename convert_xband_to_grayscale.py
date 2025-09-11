@@ -15,7 +15,7 @@ from pathlib import Path
 import shutil
 import cv2
 
-IMG_EXTS = {".png", ".jpg", ".jpeg"}
+IMG_EXTS = {".png", ".jpg", ".jpeg", ".PNG", ".JPG", ".JPEG"}
 
 def to_grayscale(img_bgr, mode="3ch"):
     """Convert BGR (or BGRA) image to grayscale.
@@ -80,11 +80,7 @@ def main():
             else:
                 count_img += 1
 
-        # Optionally mirror labels/ or other non-image files
-        elif args.copy-labels and "labels" in [p.name for p in src_path.parents]:
-            dst_path.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(src_path, dst_path)
-            count_copy += 1
+       
 
     print(f"\nDone.")
     print(f"Converted images : {count_img}")

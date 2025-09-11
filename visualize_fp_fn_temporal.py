@@ -17,10 +17,10 @@ import numpy as np
 
 # ---- paths (edit if needed) ----
 ROOT = Path("/raid/yolov5")
-IMG_DIR = ROOT / "moana_xband_gray_temporal_2/images/test"
-GT_DIR  = ROOT / "moana_xband_gray_temporal_2/labels/test"
-PRED_DIR = ROOT / "runs/val/xband_temporal_test_results3/labels"
-OUT_DIR = ROOT / "runs/val/xband_temporal_test_results3/vis"
+IMG_DIR = ROOT / "moana_xband_gray_temporal_final_S2/images/test"
+GT_DIR  = ROOT / "moana_xband_gray_temporal_final_S2/labels/test"
+PRED_DIR = ROOT / "runs/val/single-stream_two_debug_test/labels"
+OUT_DIR = ROOT / "runs/val/single-stream_two_debug_test/vis"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 # ---- colors ----

@@ -1,0 +1,69 @@
+# X-band radar hyperparams (complete set)
+lr0: 0.005          # initial LR (for total batch = 32)
+lrf: 0.01
+momentum: 0.937
+weight_decay: 0.0005
+warmup_epochs: 3.0
+warmup_momentum: 0.8
+warmup_bias_lr: 0.1
+
+# Loss balance
+box: 0.05
+obj: 1.2
+cls: 0.5
+cls_pw: 1.0
+obj_pw: 1.0
+
+# Assignment
+iou_t: 0.25
+anchor_t: 4.0
+
+# Focal loss
+fl_gamma: 0.0
+
+# Color aug (minimal for radar)
+#hsv_h: 0.0
+#hsv_s: 0.10
+#hsv_v: 0.10
+
+# for 3 frame 
+hsv_h: 0.0
+hsv_s: 0.0
+hsv_v: 0.0
+
+# Geometric aug
+#degrees: 2.0
+#translate: 0.10
+#scale: 0.80
+#shear: 0.10
+#perspective: 0.0
+#flipud: 0.0
+#fliplr: 0.5
+
+degrees: 5.0        # allow ±5° rotation (radar sweep angle errors)
+translate: 0.15     # up to 15% shift
+scale: 0.90         # less aggressive than 0.80 (avoid shrinking ships too much)
+shear: 2.0          # allow small shape deformation
+perspective: 0.0    # keep 0, radar is not perspective-based
+flipud: 0.0         # don’t flip vertically (radar geometry)
+fliplr: 0.5         # keep left-right flipping
+
+
+# Mixing aug
+#mosaic: 0.70
+#mixup: 0.05
+#copy_paste: 0.0
+
+mosaic: 0.4       # still useful, but less destructive
+mixup: 0.1        # increase a bit, simulates radar clutter overlap
+copy_paste: 0.1   # try it, useful for small ship replication
+
+#Radar-specific aug
+radar_noise: 0.05     # custom: Gaussian+speckle. Idea: inject noise (Gaussian + speckle) into training images to simulate real radar clutter.
+blur: 0.1             # 10% chance apply Gaussian blur. apply blur randomly to 10% of images.
+cutout: 0.1           # randomly erase small patches
+
+
+# α-DIoU Loss
+#iou_type: adiou      # options: ciou, diou, giou, iou, adiou
+#alpha_iou: 0.5     # α in (0, +∞); try 0.3–0.7 for small ships
