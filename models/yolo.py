@@ -17,6 +17,7 @@ from pathlib import Path
 
 import torch
 import torch.nn as nn
+
 from models.common import C3Light, DSConv
 
 FILE = Path(__file__).resolve()
@@ -49,8 +50,6 @@ from models.common import (
     GhostBottleneck,
     GhostConv,
     Proto,
-    C3Light,
-    DSConv,
 )
 from models.experimental import MixConv2d
 from utils.autoanchor import check_anchor_order
@@ -70,7 +69,6 @@ try:
     import thop  # for FLOPs computation
 except ImportError:
     thop = None
-
 
 
 class Detect(nn.Module):
@@ -432,7 +430,7 @@ def parse_model(d, ch):
                 c2 = make_divisible(c2 * gw, ch_mul)
 
             args = [c1, c2, *args[1:]]
-            if m in {BottleneckCSP, C3,C3Light, C3TR, C3Ghost, C3x}:
+            if m in {BottleneckCSP, C3, C3Light, C3TR, C3Ghost, C3x}:
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is nn.BatchNorm2d:

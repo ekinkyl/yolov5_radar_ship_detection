@@ -1,5 +1,5 @@
 # X-band radar hyperparams (complete set)
-lr0: 0.005          # initial LR (for total batch = 32)
+lr0: 0.005 # initial LR (for total batch = 32)
 lrf: 0.01
 momentum: 0.937
 weight_decay: 0.0005
@@ -26,7 +26,7 @@ fl_gamma: 0.0
 #hsv_s: 0.10
 #hsv_v: 0.10
 
-# for 3 frame 
+# for 3 frame
 hsv_h: 0.0
 hsv_s: 0.0
 hsv_v: 0.0
@@ -40,49 +40,49 @@ hsv_v: 0.0
 #flipud: 0.0
 #fliplr: 0.5
 
-degrees: 8.0        # allow ±5° rotation (radar sweep angle errors)
-translate: 0.2     # up to 15% shift
-scale: 0.85         # less aggressive than 0.80 (avoid shrinking ships too much)
-shear: 2.0          # allow small shape deformation
-perspective: 0.0    # keep 0, radar is not perspective-based
-flipud: 0.0         # don’t flip vertically (radar geometry)
-fliplr: 0.5         # keep left-right flipping
-
+degrees: 8.0 # allow ±5° rotation (radar sweep angle errors)
+translate: 0.2 # up to 15% shift
+scale: 0.85 # less aggressive than 0.80 (avoid shrinking ships too much)
+shear: 2.0 # allow small shape deformation
+perspective: 0.0 # keep 0, radar is not perspective-based
+flipud: 0.0 # don’t flip vertically (radar geometry)
+fliplr: 0.5 # keep left-right flipping
 
 # Mixing aug
 #mosaic: 0.70
 #mixup: 0.05
 #copy_paste: 0.0
 
-mosaic: 0.5       # still useful, but less destructive
-mixup: 0.2        # increase a bit, simulates radar clutter overlap
-copy_paste: 0.15   # try it, useful for small ship replication
+mosaic: 0.5 # still useful, but less destructive
+mixup: 0.2 # increase a bit, simulates radar clutter overlap
+copy_paste: 0.15 # try it, useful for small ship replication
 
 #Radar-specific aug
-radar_noise: 0.1     # custom: Gaussian+speckle. Idea: inject noise (Gaussian + speckle) into training images to simulate real radar clutter.
+radar_noise: 0.1 # custom: Gaussian+speckle. Idea: inject noise (Gaussian + speckle) into training images to simulate real radar clutter.
 radar_gauss_std: 20
 radar_speckle_var: 0.1
 
-blur: 0.1             # 10% chance apply Gaussian blur. apply blur randomly to 10% of images.
-cutout: 0.1           # randomly erase small patches
+blur: 0.1 # 10% chance apply Gaussian blur. apply blur randomly to 10% of images.
+cutout:
+  0.1 # randomly erase small patches
 
-  
+
   # Custom radar augmentations
-rcs_prob: 0.5          # probability of applying RCS scaling
-rcs_min: 0.7           # lower bound of scaling factor
-rcs_max: 1.3           # upper bound of scaling factor
+rcs_prob: 0.5 # probability of applying RCS scaling
+rcs_min: 0.7 # lower bound of scaling factor
+rcs_max: 1.3 # upper bound of scaling factor
 
-az_blur_prob: 0.3      # probability of applying azimuth blur
-az_blur_kernel: 7      # kernel size for blur (odd integer, e.g., 3, 5, 7)
+az_blur_prob: 0.3 # probability of applying azimuth blur
+az_blur_kernel: 7 # kernel size for blur (odd integer, e.g., 3, 5, 7)
 
-ghost_prob: 0.2        # probability of adding ghost echoes
-ghost_max_size: 40     # maximum ghost patch size (pixels)
-ghost_min_intensity: 0.3  # blending factor lower bound
-ghost_max_intensity: 0.6  # blending factor upper bound
+ghost_prob: 0.2 # probability of adding ghost echoes
+ghost_max_size: 40 # maximum ghost patch size (pixels)
+ghost_min_intensity: 0.3 # blending factor lower bound
+ghost_max_intensity: 0.6 # blending factor upper bound
 
-range_distort_prob: 0.3    # probability of applying range distortion
-range_min_scale: 0.85       # minimum vertical scale factor
-range_max_scale: 1.15       # maximum vertical scale factor
+range_distort_prob: 0.3 # probability of applying range distortion
+range_min_scale: 0.85 # minimum vertical scale factor
+range_max_scale: 1.15 # maximum vertical scale factor
 
 # α-DIoU Loss
 #iou_type: adiou      # options: ciou, diou, giou, iou, adiou

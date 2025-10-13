@@ -1,4 +1,5 @@
 import os
+
 import cv2
 
 # Root dirs
@@ -33,7 +34,7 @@ for split in splits:
         H, W = img.shape[:2]
 
         fixed_lines = []
-        with open(label_path, "r") as f:
+        with open(label_path) as f:
             for line in f:
                 parts = line.strip().split()
                 if len(parts) != 5:
@@ -52,9 +53,7 @@ for split in splits:
                 w_new = w_pix / W
                 h_new = h_pix / H
 
-                fixed_lines.append(
-                    f"{int(cls)} {x_new:.6f} {y_new:.6f} {w_new:.6f} {h_new:.6f}\n"
-                )
+                fixed_lines.append(f"{int(cls)} {x_new:.6f} {y_new:.6f} {w_new:.6f} {h_new:.6f}\n")
 
         # Save corrected file
         out_path = os.path.join(output_dir, fname)

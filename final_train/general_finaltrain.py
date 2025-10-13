@@ -33,6 +33,7 @@ import pkg_resources as pkg
 import torch
 import torchvision
 import yaml
+
 from .metrics import box_iou
 
 # Import 'ultralytics' package or install if missing
@@ -1008,6 +1009,7 @@ def clip_segments(segments, shape):
         segments[:, 0] = segments[:, 0].clip(0, shape[1])  # x
         segments[:, 1] = segments[:, 1].clip(0, shape[0])  # y
 
+
 def _connected_components_from_adj(adj: torch.Tensor):
     """
     adj: [N,N] bool adjacency on current device.
@@ -1033,14 +1035,15 @@ def _connected_components_from_adj(adj: torch.Tensor):
 
 
 def _cluster_nms_single_class(
-    boxes: torch.Tensor,      # [N,4] xyxy
-    scores: torch.Tensor,     # [N]
+    boxes: torch.Tensor,  # [N,4] xyxy
+    scores: torch.Tensor,  # [N]
     iou_thres: float,
     beta: float = 0.6,
-    normalize: bool = True
+    normalize: bool = True,
 ):
     """
     Cluster-NMS for one image, one class.
+
     Returns merged_boxes [M,4], merged_scores [M].
     """
     N = boxes.size(0)
@@ -1053,7 +1056,7 @@ def _cluster_nms_single_class(
     scores = scores[order]
 
     # pairwise IoU and adjacency
-    ious = box_iou(boxes, boxes)      # [N,N]
+    ious = box_iou(boxes, boxes)  # [N,N]
     adj = ious >= iou_thres
     adj.fill_diagonal_(True)
 
@@ -1061,8 +1064,8 @@ def _cluster_nms_single_class(
 
     merged_boxes, merged_scores = [], []
     for comp in comps:
-        b = boxes[comp]      # [k,4]
-        s = scores[comp]     # [k]
+        b = boxes[comp]  # [k,4]
+        s = scores[comp]  # [k]
         if b.size(0) == 1:
             merged_boxes.append(b[0])
             merged_scores.append(s[0])
@@ -1075,11 +1078,13 @@ def _cluster_nms_single_class(
             w = w / (w.sum() + 1e-9)
 
         mb = (w[:, None] * b).sum(dim=0)  # weighted avg in xyxy
-        ms = torch.max(s)                 # keep max score
+        ms = torch.max(s)  # keep max score
         merged_boxes.append(mb)
         merged_scores.append(ms)
 
     return torch.stack(merged_boxes, 0), torch.stack(merged_scores, 0)
+
+
 def non_max_suppression(
     prediction,
     conf_thres=0.25,
@@ -1090,9 +1095,8 @@ def non_max_suppression(
     labels=(),
     max_det=300,
     nm=0,  # number of masks
-    method='classic',                   # NEW: 'classic' or 'cluster'
-    cluster_cfg=None                    # NEW: dict {'beta':0.6, 'normalize':True}
-
+    method="classic",  # NEW: 'classic' or 'cluster'
+    cluster_cfg=None,  # NEW: dict {'beta':0.6, 'normalize':True}
 ):
     """
     Non-Maximum Suppression (NMS) on inference results to reject overlapping detections.
@@ -1178,7 +1182,7 @@ def non_max_suppression(
         c = x[:, 5:6] * (0 if agnostic else max_wh)  # class offsets if not agnostic
         boxes_all, scores_all = x[:, :4] + c, x[:, 4]
 
-        if method == 'classic' or (nm > 0):  # fallback to classic if masks are present
+        if method == "classic" or (nm > 0):  # fallback to classic if masks are present
             i = torchvision.ops.nms(boxes_all, scores_all, iou_thres)
             i = i[:max_det]
             if merge and (1 < n < 3e3):
@@ -1192,8 +1196,8 @@ def non_max_suppression(
             # Cluster-NMS path
             if cluster_cfg is None:
                 cluster_cfg = {}
-            beta = float(cluster_cfg.get('beta', 0.6))
-            normalize = bool(cluster_cfg.get('normalize', True))
+            beta = float(cluster_cfg.get("beta", 0.6))
+            normalize = bool(cluster_cfg.get("normalize", True))
 
             out_list = []
             if agnostic:
@@ -1202,9 +1206,9 @@ def non_max_suppression(
                 s = x[:, 4]
                 mb, ms = _cluster_nms_single_class(b, s, iou_thres, beta, normalize)
                 # assign class from nearest original box
-                ious = box_iou(mb, x[:, :4])          # [M,N]
-                nn_idx = ious.argmax(dim=1)           # nearest original
-                cls_col = x[nn_idx, 5:6]              # [M,1]
+                ious = box_iou(mb, x[:, :4])  # [M,N]
+                nn_idx = ious.argmax(dim=1)  # nearest original
+                cls_col = x[nn_idx, 5:6]  # [M,1]
                 out_c = torch.cat([mb, ms.unsqueeze(1), cls_col], dim=1)
                 out_list.append(out_c)
             else:
@@ -1217,7 +1221,7 @@ def non_max_suppression(
                     b = x_c[:, :4]
                     s = x_c[:, 4]
                     mb, ms = _cluster_nms_single_class(b, s, iou_thres, beta, normalize)
-                    cls_col  = torch.full((mb.size(0), 1), cval, device=mb.device)
+                    cls_col = torch.full((mb.size(0), 1), cval, device=mb.device)
                     conf_col = ms.unsqueeze(1)
                     out_c = torch.cat([mb, conf_col, cls_col], dim=1)  # [M,6]
                     out_list.append(out_c)

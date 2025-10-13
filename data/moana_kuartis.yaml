@@ -3,4 +3,4 @@ val: /raid/yolov5/newDataset/images/val
 test: /raid/yolov5/newDataset/images/test
 
 nc: 1
-names: ['v']
+names: ["v"]

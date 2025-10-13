@@ -1,12 +1,12 @@
-import os
 import shutil
 from pathlib import Path
 
 # ===== CONFIG =====
-GRAY_IMAGES_DIR = Path("gray_images/images")   # tüm grayscale imgeler
-LABELS_ROOT = Path("moana_xband_gray_split_sequence_final/labels")       # split edilmiş label klasörleri
+GRAY_IMAGES_DIR = Path("gray_images/images")  # tüm grayscale imgeler
+LABELS_ROOT = Path("moana_xband_gray_split_sequence_final/labels")  # split edilmiş label klasörleri
 OUTPUT_ROOT = Path("moana_xband_gray_split_sequence_final")
 # ==================
+
 
 def copy_images_for_split(split: str):
     lbl_dir = LABELS_ROOT / split
@@ -27,6 +27,7 @@ def copy_images_for_split(split: str):
             missing += 1
 
     print(f"{split}: {count} images copied, {missing} missing")
+
 
 for split in ["train", "val", "test"]:
     copy_images_for_split(split)

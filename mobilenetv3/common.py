@@ -20,7 +20,7 @@ import requests
 import torch
 import torch.nn as nn
 from PIL import Image
-from torch.cuda import amp  
+from torch.cuda import amp
 
 # Import 'ultralytics' package or install if missing
 try:
@@ -69,10 +69,12 @@ def autopad(k, p=None, d=1):
         p = k // 2 if isinstance(k, int) else [x // 2 for x in k]  # auto-pad
     return p
 
+
 class MBV3Backbone(nn.Module):
     def __init__(self, pretrained=True, in_chans=3):
         super().__init__()
-        from torchvision.models import mobilenet_v3_large, MobileNet_V3_Large_Weights
+        from torchvision.models import MobileNet_V3_Large_Weights, mobilenet_v3_large
+
         weights = MobileNet_V3_Large_Weights.DEFAULT if pretrained else None
         self.mbv3 = mobilenet_v3_large(weights=weights).features
         self.out_indices = [6, 12, 15]
@@ -80,9 +82,7 @@ class MBV3Backbone(nn.Module):
 
         if in_chans == 1:
             conv0 = self.mbv3[0][0]
-            new_conv = nn.Conv2d(1, conv0.out_channels,
-                                 conv0.kernel_size, conv0.stride,
-                                 conv0.padding, bias=False)
+            new_conv = nn.Conv2d(1, conv0.out_channels, conv0.kernel_size, conv0.stride, conv0.padding, bias=False)
             new_conv.weight.data = conv0.weight.mean(1, keepdim=True)
             self.mbv3[0][0] = new_conv
 
@@ -92,14 +92,17 @@ class MBV3Backbone(nn.Module):
             x = m(x)
             if i in self.out_indices:
                 outs.append(x)
-        return tuple(outs)   # instead of list
-        
+        return tuple(outs)  # instead of list
+
+
 class TupleRoute(nn.Module):
     def __init__(self, index):
         super().__init__()
         self.index = index
+
     def forward(self, x):
         return x[self.index]
+
 
 class Conv(nn.Module):
     """Applies a convolution, batch normalization, and activation function to an input tensor in a neural network."""

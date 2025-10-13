@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from PIL import Image
 import open3d as o3d
+from PIL import Image
 
 frame = "000850"
 pcd_file = f"ship/id_04/{frame}.pcd"
@@ -16,10 +16,10 @@ X_MIN, X_MAX = 40, 170
 Y_MIN, Y_MAX = -35, 100
 
 # project into image pixels
-u = (pts[:,0] - X_MIN) / (X_MAX - X_MIN) * W
-v = (pts[:,1] - Y_MIN) / (Y_MAX - Y_MIN) * H
+u = (pts[:, 0] - X_MIN) / (X_MAX - X_MIN) * W
+v = (pts[:, 1] - Y_MIN) / (Y_MAX - Y_MIN) * H
 
 plt.imshow(img, cmap="gray")
-plt.scatter(u, v, s=5, c='r')
+plt.scatter(u, v, s=5, c="r")
 plt.title(f"Radar points projected on {frame}.png")
 plt.show()

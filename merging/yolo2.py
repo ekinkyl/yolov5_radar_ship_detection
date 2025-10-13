@@ -34,6 +34,7 @@ from models.common import (
     Bottleneck,
     BottleneckCSP,
     C3Ghost,
+    C3Light,
     C3x,
     Classify,
     Concat,
@@ -41,6 +42,7 @@ from models.common import (
     Conv,
     CrossConv,
     DetectMultiBackend,
+    DSConv,
     DWConv,
     DWConvTranspose2d,
     Expand,
@@ -48,11 +50,8 @@ from models.common import (
     GhostBottleneck,
     GhostConv,
     Proto,
-    C3Light,
-    DSConv,
-    MBV3Backbone,
-    TupleRoute,
     SPP_yosmr,
+    TupleRoute,
 )
 from models.experimental import MixConv2d
 from utils.autoanchor import check_anchor_order
@@ -72,6 +71,7 @@ try:
     import thop  # for FLOPs computation
 except ImportError:
     thop = None
+
 
 class Detect(nn.Module):
     """YOLOv5 Detect head for processing input tensors and generating detection outputs in object detection models."""
@@ -400,16 +400,16 @@ def parse_model(d, ch):
     layers, save, c2 = [], [], ch[-1]  # layers, savelist, ch out
     for i, (f, n, m, args) in enumerate(d["backbone"] + d["head"]):  # from, number, module, args
         m = eval(m) if isinstance(m, str) else m  # eval strings
-        
+
         # Special handling for TupleRoute when source is MBV3Backbone
         if m is TupleRoute:
             sel = args[0] if isinstance(args[0], int) else int(args[0])
             src = f if isinstance(f, int) else f[0]
-            if src >= 0 and hasattr(layers[src], 'out_channels'):
-                c2 = layers[src].out_channels[sel]   # 40, 112, 160
+            if src >= 0 and hasattr(layers[src], "out_channels"):
+                c2 = layers[src].out_channels[sel]  # 40, 112, 160
             else:
                 c2 = ch[src]
-            ch.append(c2)   # <--- add this so future layers see correct input channels
+            ch.append(c2)  # <--- add this so future layers see correct input channels
             m_ = m(*args)
             t = str(m)[8:-2]
             np = sum(x.numel() for x in m_.parameters())
@@ -444,14 +444,14 @@ def parse_model(d, ch):
             nn.ConvTranspose2d,
             DWConvTranspose2d,
             C3x,
-            SPP_yosmr
+            SPP_yosmr,
         }:
             c1, c2 = ch[f], args[0]
             if c2 != no:  # if not output
                 c2 = make_divisible(c2 * gw, ch_mul)
 
             args = [c1, c2, *args[1:]]
-            if m in {BottleneckCSP, C3,C3Light, C3TR, C3Ghost, C3x}:
+            if m in {BottleneckCSP, C3, C3Light, C3TR, C3Ghost, C3x}:
                 args.insert(2, n)  # number of repeats
                 n = 1
         elif m is nn.BatchNorm2d:

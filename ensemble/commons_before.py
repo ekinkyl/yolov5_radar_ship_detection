@@ -20,7 +20,8 @@ import requests
 import torch
 import torch.nn as nn
 from PIL import Image
-from torch.cuda import amp  
+from torch.cuda import amp
+
 # Import 'ultralytics' package or install if missing
 try:
     import ultralytics
@@ -312,6 +313,7 @@ class SPP(nn.Module):
             warnings.simplefilter("ignore")  # suppress torch 1.9.0 max_pool2d() warning
             return self.cv2(torch.cat([x] + [m(x) for m in self.m], 1))
 
+
 class SPP_yosmr(nn.Module):
     """SPP module as used in YOSMR: 4 maxpool branches with kernels (1,5,9,13)."""
 
@@ -328,6 +330,7 @@ class SPP_yosmr(nn.Module):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             return self.cv2(torch.cat([m(x) for m in self.m], 1))
+
 
 class SPPF(nn.Module):
     """Implements a fast Spatial Pyramid Pooling (SPPF) layer for efficient feature extraction in YOLOv5 models."""
@@ -1137,13 +1140,16 @@ class Classify(nn.Module):
             x = torch.cat(x, 1)
         return self.linear(self.drop(self.pool(self.conv(x)).flatten(1)))
 
+
 # --- LightPANet building blocks ---
+
 
 class DSConv(nn.Module):
     """
     Depthwise-Separable Conv: depthwise 3x3 (groups=c_in) + pointwise 1x1.
     Signature matches YOLOv5 Conv(c1, c2, k, s, p=None, g=1, act=True).
     """
+
     def __init__(self, c1, c2, k=3, s=1, p=None, g=1, act=True):
         super().__init__()
         # depthwise
@@ -1156,9 +1162,8 @@ class DSConv(nn.Module):
 
 
 class BottleneckDSC(nn.Module):
-    """
-    Bottleneck that uses DSConv for the spatial 3x3 instead of a full 3x3 Conv.
-    """
+    """Bottleneck that uses DSConv for the spatial 3x3 instead of a full 3x3 Conv."""
+
     def __init__(self, c1, c2, shortcut=True, g=1, e=0.5):
         super().__init__()
         c_ = int(c2 * e)

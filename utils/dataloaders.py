@@ -55,16 +55,14 @@ from utils.general import (
     xywhn2xyxy,
     xyxy2xywhn,
 )
-from utils.torch_utils import torch_distributed_zero_first
-
 from utils.radar_aug import (
-    radar_noise,
-    rcs_scaling,
     azimuth_motion_blur,
     ghost_echo,
+    radar_noise,
     range_distortion,
+    rcs_scaling,
 )
-
+from utils.torch_utils import torch_distributed_zero_first
 
 # Parameters
 HELP_URL = "See https://docs.ultralytics.com/yolov5/tutorials/train_custom_data"
@@ -848,7 +846,6 @@ class LoadImagesAndLabels(Dataset):
                     prob=hyp.get("range_distort_prob", 0.0),
                     scale_range=(hyp.get("range_min_scale", 0.9), hyp.get("range_max_scale", 1.1)),
                 )
-
 
         nl = len(labels)  # number of labels
         if nl:
