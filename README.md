@@ -17,7 +17,7 @@ The project adapts standard object detection for specialized X-band marine radar
 
 ## Dataset & Preprocessing
 
-The model was trained and evaluated on the open-source **MOANA X-Band Radar dataset** alongside proprietary radar datasets provided by **Kuartis**.
+The model was trained and evaluated on the open-source **MOANA X-Band Radar dataset**.
 
 ### Preprocessing Pipeline:
 1. **Grayscale Conversion:** Standard RGB inputs are transformed into uniform 3-channel grayscale arrays.
