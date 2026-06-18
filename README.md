@@ -1,6 +1,6 @@
-# Ship Detection on Marine Radar Based on YOLOv5 with Integrated YOSMR Modules
+# Marine Radar Ship Detection Based on YOLOv5 with Integrated YOSMR Modules
 
-This repository contains an advanced computer vision framework for robust ship detection in marine radar images[cite: 1]. It integrates custom YOSMR (Customized Lightweight Convolutional Networks) modules and architectural adaptations into the YOLOv5 framework to address classic radar perception challenges, such as wave clutter, land/shore echoes, and weak reflections from small vessels[cite: 1].
+This repository contains an advanced computer vision framework for robust ship detection in marine radar images. It integrates custom YOSMR (Customized Lightweight Convolutional Networks) modules and architectural adaptations into the YOLOv5 framework to address classic radar perception challenges, such as wave clutter, land/shore echoes, and weak reflections from small vessels.
 
 ## Features & Key Modules
 
