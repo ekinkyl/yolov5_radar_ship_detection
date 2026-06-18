@@ -33,6 +33,7 @@ To mitigate domain-specific environmental noise, a custom augmentation module in
 
 ---
 
+
 ## Training Configuration
 
 Models are trained using PyTorch under the following operational hyperparameters:
@@ -42,3 +43,5 @@ Optimizer: SGD (lr0=0.005, momentum=0.937, weight_decay=0.0005)
 Epochs: 150 (Early stopping patience set to 20)
 Batch Size: 32
 Loss Balancing Coeffs: box=0.05, obj=1.2, cls=0.5
+
+
