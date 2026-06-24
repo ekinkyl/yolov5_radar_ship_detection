@@ -1,5 +1,6 @@
 import os
 import random
+
 import cv2
 
 img_dir = "Kuartis_images"
@@ -23,21 +24,20 @@ for img_name in samples:
         print(f"No labels for {img_name}")
         continue
 
-    with open(label_path, "r") as f:
+    with open(label_path) as f:
         lines = f.readlines()
 
     for line in lines:
         cls, x, y, w, h = map(float, line.strip().split())
         # Convert YOLO (normalized) back to pixels
-        x1 = int((x - w/2) * IMG_W)
-        y1 = int((y - h/2) * IMG_H)
-        x2 = int((x + w/2) * IMG_W)
-        y2 = int((y + h/2) * IMG_H)
+        x1 = int((x - w / 2) * IMG_W)
+        y1 = int((y - h / 2) * IMG_H)
+        x2 = int((x + w / 2) * IMG_W)
+        y2 = int((y + h / 2) * IMG_H)
 
         # Draw rectangle
         cv2.rectangle(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-        cv2.putText(img, str(int(cls)), (x1, y1 - 5),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        cv2.putText(img, str(int(cls)), (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
     # Save debug image
     out_path = os.path.join(output_dir, img_name)

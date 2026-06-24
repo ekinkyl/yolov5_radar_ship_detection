@@ -7,8 +7,6 @@ import torch.nn as nn
 from utils.metrics import bbox_iou
 from utils.torch_utils import de_parallel
 
-import torch.nn.functional as F
-from utils.general import xywh2xyxy  
 """
 def alpha_diou_loss(p_boxes_xywh, t_boxes_xywh, alpha=0.5, eps=1e-9):
    
@@ -60,6 +58,7 @@ def alpha_diou_loss(p_boxes_xywh, t_boxes_xywh, alpha=0.5, eps=1e-9):
     return loss
 
 """
+
 
 def smooth_BCE(eps=0.1):
     """Returns label smoothing BCE targets for reducing overfitting; pos: `1.0 - 0.5*eps`, neg: `0.5*eps`. For details see https://github.com/ultralytics/yolov3/issues/238#issuecomment-598028441."""
@@ -205,13 +204,12 @@ class ComputeLoss:
                 # pxy, pwh, _, pcls = pi[b, a, gj, gi].tensor_split((2, 4, 5), dim=1)  # faster, requires torch 1.8.0
                 pxy, pwh, _, pcls = pi[b, a, gj, gi].split((2, 2, 1, self.nc), 1)  # target-subset of predictions
                 # Regression
-                
+
                 pxy = pxy.sigmoid() * 2 - 0.5
                 pwh = (pwh.sigmoid() * 2) ** 2 * anchors[i]
                 pbox = torch.cat((pxy, pwh), 1)  # predicted box
                 iou = bbox_iou(pbox, tbox[i], CIoU=True).squeeze()  # iou(prediction, target)
                 lbox += (1.0 - iou).mean()  # iou loss
-                
                 """
                 # Regression (supports α‑DIoU via hyp)
                 pxy = pxy.sigmoid() * 2 - 0.5
@@ -248,7 +246,6 @@ class ComputeLoss:
                 if self.gr < 1:
                     iou = (1.0 - self.gr) + self.gr * iou
                 tobj[b, a, gj, gi] = iou  # iou ratio
-
 
                 # Classification
                 if self.nc > 1:  # cls loss (only if multiple classes)

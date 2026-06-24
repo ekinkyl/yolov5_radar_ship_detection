@@ -1,9 +1,11 @@
 import os
 
+
 def count_files(img_dir, lbl_dir):
     imgs = [f for f in os.listdir(img_dir) if f.endswith(".png")]
     lbls = [f for f in os.listdir(lbl_dir) if f.endswith(".txt")]
     return len(imgs), len(lbls)
+
 
 # Paths
 moana_train_img = "/raid/yolov5/moana_xband_gray_split_sequence_final/images/train"

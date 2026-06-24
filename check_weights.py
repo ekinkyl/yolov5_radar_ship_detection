@@ -1,17 +1,18 @@
 # check_weights.py
 import argparse
+
 import torch
-from pathlib import Path
+from ultralytics.utils.patches import torch_load
 
 from models.yolo import Model
-from utils.general import LOGGER
 from utils.downloads import attempt_download
-from ultralytics.utils.patches import torch_load
+from utils.general import LOGGER
 
 
 def check_weights(cfg, weights, device="cpu", nc=1):
     """
     Load a YOLOv5 model from cfg and try to apply weights with strict=False.
+
     Prints which layers matched, which are missing, and which are unexpected.
     """
     device = torch.device(device)

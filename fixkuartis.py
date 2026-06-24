@@ -20,7 +20,7 @@ for split in splits:
     for fname in os.listdir(in_dir):
         if not fname.endswith(".txt"):
             continue
-        
+
         fixed_lines = []
         with open(os.path.join(in_dir, fname)) as f:
             for line in f:
@@ -38,9 +38,7 @@ for split in splits:
                 w_new = w_pix / W_new
                 h_new = h_pix / H_new
 
-                fixed_lines.append(
-                    f"{int(cls)} {x_new:.6f} {y_new:.6f} {w_new:.6f} {h_new:.6f}\n"
-                )
+                fixed_lines.append(f"{int(cls)} {x_new:.6f} {y_new:.6f} {w_new:.6f} {h_new:.6f}\n")
 
         with open(os.path.join(out_dir, fname), "w") as f:
             f.writelines(fixed_lines)

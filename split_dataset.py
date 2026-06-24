@@ -16,7 +16,7 @@ for img_file in image_files:
     txt_path = label_dir / txt_file
     if not txt_path.exists():
         continue
-    with open(txt_path, "r") as f:
+    with open(txt_path) as f:
         lines = f.readlines()
     if len(lines) == 0:
         objesiz.append((img_file, 0))
@@ -27,9 +27,11 @@ for img_file in image_files:
 random.shuffle(objeli)
 random.shuffle(objesiz)
 
+
 def split(lst):
     n = len(lst)
-    return lst[:int(0.8*n)], lst[int(0.8*n):int(0.9*n)], lst[int(0.9*n):]
+    return lst[: int(0.8 * n)], lst[int(0.8 * n) : int(0.9 * n)], lst[int(0.9 * n) :]
+
 
 train_o, val_o, test_o = split(objeli)
 train_e, val_e, test_e = split(objesiz)
@@ -37,6 +39,7 @@ train_e, val_e, test_e = split(objesiz)
 train = train_o + train_e
 val = val_o + val_e
 test = test_o + test_e
+
 
 def copy_split(split_data, split_name):
     img_out = output_base / "images" / split_name
@@ -58,6 +61,7 @@ def copy_split(split_data, split_name):
         total_obj += obj_count
 
     print(f"{split_name.upper()} -> {len(split_data)} images, {total_obj} objects")
+
 
 copy_split(train, "train")
 copy_split(val, "val")

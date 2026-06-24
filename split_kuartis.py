@@ -1,6 +1,6 @@
 import os
-import shutil
 import random
+import shutil
 
 # Input folders
 img_dir = "Kuartis_images"
@@ -22,8 +22,9 @@ images = sorted([f for f in os.listdir(img_dir) if f.endswith(".png")])
 labels = sorted([f for f in os.listdir(label_dir) if f.endswith(".txt")])
 
 # Double check: names must match
-assert [os.path.splitext(f)[0] for f in images] == [os.path.splitext(f)[0] for f in labels], \
+assert [os.path.splitext(f)[0] for f in images] == [os.path.splitext(f)[0] for f in labels], (
     "❌ Images and labels do not match!"
+)
 
 # Shuffle before splitting
 combined = list(zip(images, labels))
@@ -33,22 +34,16 @@ n = len(combined)
 train_end = int(n * train_ratio)
 val_end = train_end + int(n * val_ratio)
 
-splits = {
-    "train": combined[:train_end],
-    "val": combined[train_end:val_end],
-    "test": combined[val_end:]
-}
+splits = {"train": combined[:train_end], "val": combined[train_end:val_end], "test": combined[val_end:]}
 
 # Copy files
 for split, files in splits.items():
     for img_file, label_file in files:
         # Copy image
-        shutil.copy(os.path.join(img_dir, img_file),
-                    os.path.join(output_root, "images", split, img_file))
+        shutil.copy(os.path.join(img_dir, img_file), os.path.join(output_root, "images", split, img_file))
 
         # Copy label
-        shutil.copy(os.path.join(label_dir, label_file),
-                    os.path.join(output_root, "labels", split, label_file))
+        shutil.copy(os.path.join(label_dir, label_file), os.path.join(output_root, "labels", split, label_file))
 
 print("✅ Split completed!")
 print(f"Train: {len(splits['train'])}, Val: {len(splits['val'])}, Test: {len(splits['test'])}")

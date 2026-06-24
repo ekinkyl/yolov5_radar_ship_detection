@@ -8,4 +8,4 @@ test: /raid/yolov5/moana_xband_two_stream_both_s1/images_app/test
 
 # Classes
 nc: 1
-names: ['v']   # v = vessel/ship
+names: ["v"] # v = vessel/ship

@@ -1,5 +1,5 @@
 # X-band radar hyperparams (complete set)
-lr0: 0.005          # initial LR (for total batch = 32)
+lr0: 0.005 # initial LR (for total batch = 32)
 lrf: 0.01
 momentum: 0.937
 weight_decay: 0.0005
@@ -26,7 +26,7 @@ fl_gamma: 0.0
 #hsv_s: 0.10
 #hsv_v: 0.10
 
-# for 3 frame 
+# for 3 frame
 hsv_h: 0.0
 hsv_s: 0.0
 hsv_v: 0.0
@@ -44,7 +44,6 @@ fliplr: 0.5
 mosaic: 0.70
 mixup: 0.05
 copy_paste: 0.0
-
 # α-DIoU Loss
 #iou_type: adiou      # options: ciou, diou, giou, iou, adiou
 #alpha_iou: 0.5     # α in (0, +∞); try 0.3–0.7 for small ships

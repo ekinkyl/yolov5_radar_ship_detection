@@ -12,7 +12,7 @@ tree = ET.parse(xml_path)
 root = tree.getroot()
 
 for track in root.findall("track"):
-    label = track.attrib["label"]   # e.g., "Dinamik Obje"
+    label = track.attrib["label"]  # e.g., "Dinamik Obje"
     cls_id = 0  # only one class
 
     for box in track.findall("box"):

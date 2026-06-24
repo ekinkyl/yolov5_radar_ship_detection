@@ -22,6 +22,7 @@ for split in ["train", "val", "test"]:
     os.makedirs(os.path.join(output_root, "images", split), exist_ok=True)
     os.makedirs(os.path.join(output_root, "labels", split), exist_ok=True)
 
+
 def copy_all(src_imgs, src_lbls, dst_split):
     for img_file in sorted(os.listdir(src_imgs)):
         if not img_file.endswith(".png"):
@@ -30,8 +31,7 @@ def copy_all(src_imgs, src_lbls, dst_split):
         label_file = base + ".txt"
 
         # Copy image
-        shutil.copy(os.path.join(src_imgs, img_file),
-                    os.path.join(output_root, "images", dst_split, img_file))
+        shutil.copy(os.path.join(src_imgs, img_file), os.path.join(output_root, "images", dst_split, img_file))
 
         # Copy label (if exists, else create empty file)
         src_lbl_path = os.path.join(src_lbls, label_file)
@@ -41,6 +41,7 @@ def copy_all(src_imgs, src_lbls, dst_split):
             shutil.copy(src_lbl_path, dst_lbl_path)
         else:
             open(dst_lbl_path, "w").close()
+
 
 # Build dataset
 # Train = Moana train + Kuartis train
